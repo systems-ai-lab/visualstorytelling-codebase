@@ -1,5 +1,5 @@
 # Downloading Visual Storytelling (VIST) Dataset
-The visual storytelling (VIST) dataset is available to download from [VIST dataset](http://visionandlanguage.net/VIST/dataset.html) link. This dataset has two categories include Descriptions of Images-in-Isolation (DII) and Stories of Images-in-Sequence (SIS). The main difference between these two categories is the time context and narrative language. The VIST dataset contain two kind of dataset to download including text annotation and image files. 
+The visual storytelling (VIST) dataset is available to download from [VIST dataset](http://visionandlanguage.net/VIST/dataset.html) link. This dataset has two categories include Descriptions of Images-in-Isolation (DII) and Stories of Images-in-Sequence (SIS). The main difference between these two categories is the time context and narrative language. The VIST dataset contain two kind of dataset to download including text annotation and image files.
 
 ## Text Annotation Download
 To download the text annotation we can download directly from the website link below:
