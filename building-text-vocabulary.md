@@ -19,6 +19,8 @@ Special token is needed for several purposes, in this document we will show 4 sp
 |1|```<start>```|This token indicates the beginning of the sentence. It will appended for every sentences in story.|
 |2|```<end>```|In contrary with ```<start>``` token, this token indicates the end of the sentence in story. This token appended in as the last word of story|
 |3|```<unk>```|This token is used for replacing the a word that not included in vocabulary due to insufficient of minimum threshold|
+|4|```<pad>```|When the length of the sentence is less than the fix-length defined number, we add ```<pad>``` after the ```<end>``` token.|
+
 
 To be continued...
 
