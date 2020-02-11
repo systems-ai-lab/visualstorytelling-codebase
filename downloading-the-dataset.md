@@ -1,5 +1,5 @@
 # Downloading Visual Storytelling (VIST) Dataset
-To download the VIST dataset, we already provide a downloader script [download_dataset.sh](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/script/download_dataset.sh). Download this script and run on terminal/console:
+To download the VIST dataset, we already provide a script downloader [download_dataset.sh](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/script/download_dataset.sh). Download this script and run on terminal/console:
 ```
 $ sh download_dataset.sh -d <DESTINATION_DIRECTORY>
 ```
