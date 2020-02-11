@@ -1,4 +1,9 @@
 # Downloading Visual Storytelling (VIST) Dataset
+To download the VIST dataset, we already provide a downloader script [download_dataset.sh](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/script/download_dataset.sh). Download this script and run on terminal/console:
+```
+$ sh download_dataset.sh -d <DESTINATION_DIRECTORY>
+```
+
 The visual storytelling (VIST) dataset is available to download from [VIST dataset](http://visionandlanguage.net/VIST/dataset.html) link. This dataset has two categories include Descriptions of Images-in-Isolation (DII) and Stories of Images-in-Sequence (SIS). The main difference between these two categories is the time context and narrative language. The VIST dataset contain two kind of dataset to download including text annotation and image files.
 
 ## Text Annotation Download
