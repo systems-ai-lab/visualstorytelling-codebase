@@ -1,17 +1,62 @@
 #!/bin/bash
-# Script for downloading VIST (Visual Storytelling Dataset)
-: '
-    To do list:
-    1. Determining the base path of the dataset location (Finish)
-        - create directory for save the original file of dataset (Finish)
-        - create directory for text-annotation and images-annotation (Finish)
-    2. Extracting the zip file
-        - placing the dataset in the created directory (Finish)
-        - remove the directory of contained original compressed file 
-    3. Resizing all of the images file
 
-'
-# User specify argument
+# AUTHOR: Rizal Setya Perdana (rizalespe@ub.ac.id) DATE: 2020-02-11
+
+# About this script: the purpose of this script is to  
+# automatically downloading the Visual Storytelling (VIST) Dataset 
+# from http://visionandlanguage.net/VIST/dataset.html. Please cite 
+# https://arxiv.org/abs/1604.03968 if you use this script.
+
+# NOTES: we have to change the download images link location and reupload 
+# to our Google Drive due to the permision issues from the GDOWN package.
+# Our dataset version is already resized to 256x256.   
+
+# ARGUMENT: to specify the download location, add -d <DIR> argument for the dataset location.
+
+# The structure of the directory is as follow:
+# 
+# dataset
+# ├── images
+# │   ├── test
+# │   │   ├──images_1.jpg
+# │   │   ├──images_n.jpg
+# │   ├── train
+# │   │   ├──images_1.jpg
+# │   │   ├──images_n.jpg
+# │   └── val
+# │       ├──images_1.jpg
+# │       ├──images_n.jpg
+# └── text-annotation
+#     ├── dii
+#     │   ├── test.description-in-isolation.json
+#     │   ├── train.description-in-isolation.json
+#     │   └── val.description-in-isolation.json
+#     └── sis
+#         ├── test.story-in-sequence.json
+#         ├── train.story-in-sequence.json
+#         └── val.story-in-sequence.json
+
+# TODO:
+# 1. Determining the base path of the dataset location (Finish)
+#     - create directory for save the original file of dataset (Finish)
+#     - create directory for text-annotation and images-annotation (Finish)
+# 2. Extracting the zip file
+#     - placing the dataset in the created directory (Finish)
+#     - remove the directory of contained original compressed file 
+# 3. Resizing all of the images file (pending, we already change the 
+#    download images link to resized version)
+
+. ~/.bashrc # make sure all of the variable of the user can same as with user login
+
+# Checking the dependency packages
+if python -c 'import gdown;'; then
+    echo -e '[INFO] Checking the package dependency... OK'
+else
+    echo -e '[ERROR] You need to install gdown package by typing: "pip install gdown"'
+    exit 1
+fi
+
+# Recieve user specify argument
 while [ "$1" != "" ]; do
     case $1 in
         -d | --directory ) shift 
@@ -43,7 +88,7 @@ then
     if [[ -d "$(pwd)/dataset" ]] # check if the "dataset" directory is exist
     then
         # the condition which the directory is exist
-        echo "[INFO] '$(pwd)/dataset' is exists in your system, and the dataset will downloaded here."
+        echo -e "[INFO] '$(pwd)/dataset' is exists in your system, and the dataset will downloaded here."
         
         preparing_the_directory
 
@@ -51,14 +96,14 @@ then
         mkdir -p "dataset"
         # the condition which the directory is not exist
         download_dir=$(pwd)"/dataset"
-        echo "[INFO] The dataset will downloaded in: '$download_dir'"
+        echo -e "[INFO] The dataset will downloaded in: '$download_dir'"
 
         preparing_the_directory
     fi
         
 else
     # the condition when user SPECIFY the download location
-    echo "[INFO] The dataset will downloaded in: $specify_download_dir""dataset"
+    echo -e "[INFO] The dataset will downloaded in: $specify_download_dir""dataset"
     mkdir -p "$specify_download_dir""dataset"
     cd $specify_download_dir
     preparing_the_directory
@@ -77,44 +122,39 @@ download_text_annotation () {
 
     # check the files succesfully downloaded
     if test -f $file_dii; then
-        echo "[INFO] File $file_dii is downloaded succesfully... OK"
+        echo -e "[INFO] File $file_dii is downloaded succesfully... OK"
     fi
 
     if test -f $file_sis; then
-        echo "[INFO] File $file_sis is downloaded succesfully... OK"
+        echo -e "[INFO] File $file_sis is downloaded succesfully... OK"
     fi
 
     # extracting the text-annotation file
     tar -xf $file_dii -C ../../text-annotation/
     tar -xf $file_sis -C ../../text-annotation/
 
-    echo "[INFO] Extracting text-annotation files succesfully... OK"
-    
+    echo -e "[INFO] Extracting text-annotation files succesfully... OK"
 }
 
 download_images_annotation(){
     cd ../images/
+    
+    echo -e "[INFO] Starting to download the TEST DATASET (resized version) ..."
+    gdown https://drive.google.com/uc?id=1zv-9NHLLzWCANumdsNtwDK1WV549b270 # test dataset
+    echo -e "[INFO] Starting to download the TRAIN DATASET (resized version) ..."
+    gdown https://drive.google.com/uc?id=1KO-MzfAW62jI-yL_hEHsxjA1DbvvjAaT # train dataset
+    echo -e "[INFO] Starting to download the VALIDATION DATASET  (resized version) ..."
+    gdown https://drive.google.com/uc?id=1wAL_Th_skQlLyQIxo-xExJF7Zf0sa_1- # val dataset
 
-    # Original download link is not working (10/02/2020) :(
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSeEpDajIwOUFhaGc
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSZnZPY1dmaHJzMHc
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSb0VjVDJ3am40VVE
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSTmQtd1VfWWFyUHM
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSQ1ozYmlITXlUaDQ
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSTVY1MnFGV0JiVkk
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSYmhmbnp6d2I4a2M
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSZl9aNGVuX0llcEU
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSWXJ3R3hsZllsNVk
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSR2N4cFpweURhTjg
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViScllKWnlaVU53Skk
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSV2QxZW1rVXcxT1U
-    # gdown https://drive.google.com/uc?id=0ByQS_kT8kViSNGNPTEFhdGxkMnM
-
-    # Upload the resized images file link
+    unzip test.zip -d ../../images/ # extract test images to directory images
+    unzip train.zip -d ../../images/ # extract train images to directory images
+    unzip val.zip -d ../../images/ # extract validation images to directory images
+    rm -rf ../../images/__MACOSX/ # remove unnecessary directory
+    rm -rf ../../original/ # remove the original directory containing zip file
 }
 
-echo "[INFO] Starting to download text-annotation files..."
+echo -e "[INFO] Starting to download text-annotation files..."
 download_text_annotation
-echo "[INFO] Starting to download images files..."
+echo -e "[INFO] Starting to download images files..."
 download_images_annotation
-#echo $(pwd)
+echo -e "[INFO] Download the datases is finish"
