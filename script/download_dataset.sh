@@ -83,7 +83,6 @@ if test -z "$specify_download_dir" # check if user specify the location of datas
 then
     # the condition when user DO NOT specify the download location
     cd $(pwd)
-    cd ..
 
     if [[ -d "$(pwd)/dataset" ]] # check if the "dataset" directory is exist
     then
