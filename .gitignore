@@ -4,3 +4,4 @@ dataset/images/val/*
 dataset/text-annotation/dii/*
 dataset/text-annotation/sis/*
 dataset/vocabulary/*
+app/__pycache__/*
