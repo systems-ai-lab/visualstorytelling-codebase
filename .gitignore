@@ -1,0 +1,6 @@
+dataset/images/test/*
+dataset/images/train/*
+dataset/images/val/*
+dataset/text-annotation/dii/*
+dataset/text-annotation/sis/*
+dataset/vocabulary/*
