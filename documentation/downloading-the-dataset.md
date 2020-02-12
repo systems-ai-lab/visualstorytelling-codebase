@@ -11,10 +11,6 @@ To download the text annotation we can download directly from the website link b
 1. [Text Annotation - DII](http://visionandlanguage.net/VIST/json_files/description-in-isolation/DII-with-labels.tar.gz)
 2. [Text Annotation - SIS](http://visionandlanguage.net/VIST/json_files/story-in-sequence/SIS-with-labels.tar.gz)
 
-or from our repository:
-1. [Text Annotation - DII](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/dataset/text-annotation/DII-with-labels.tar.gz?raw=true)
-2. [Text Annotation - SIS](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/dataset/text-annotation/SIS-with-labels.tar.gz?raw=true)
-
 ## Image Files Download
 There are two ways to download the image files, depending on the environment that we use due to the location of the files is in Google Drive. If we use a GUI based operating system, we can directly access the Google Drive link that available in [VIST homepage](http://visionandlanguage.net/VIST/dataset.html):
 
