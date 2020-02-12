@@ -1,4 +1,4 @@
-# Building Vocabulary from the Stories of Images-in-Sequence Text Annotation
+# Generating Vocabulary from the Stories of Images-in-Sequence Text Annotation
 Before we start learning a new model from the VIST dataset, we need to prepare the words vocabulary that used in the overall story. Building vocabulary is not included in the learning process but still related to the overall learning process. As we know, the computer machine can only process numerical data, especially we use a tensor representation containing only float numbers. This process attempt to generate not only word vocabulary but also its integer index and frequency for each word.
 
 | Index        | Word           | Frequency |
