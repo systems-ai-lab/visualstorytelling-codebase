@@ -1,6 +1,12 @@
+# AUTHOR: Rizal Setya Perdana (rizalespe@ub.ac.id)
+
+# About this script: This Python script is mainly used as custom dataset wrapper 
+# and subclass of torch.utils.data.Dataset.
+
 # TODO:
-# check the data is ready or not including directory, images, text-annotation file, and vocabulary file
-# 
+# check the data is ready or not including directory, images, text-annotation 
+# file, and vocabulary file
+
 import os
 import os.path
 import json
@@ -12,7 +18,13 @@ import pickle
 from vocabulary import GenerateVocabulary
 
 class VIST(data.Dataset):
-
+    """
+        Args:
+            - dataset_dir (string): string of path to the dataset directory. In this codebase, the structure of dataset
+            - vocabulary_treshold (int, optional)
+            - type
+            - transform
+    """
     def __init__(self, dataset_dir, vocabulary_treshold=10, type='train', transform=None):
         self.dataset_dir = dataset_dir # str: main dataset directory
         self.vocabulary_treshold = vocabulary_treshold # int: get value minimum treshold of vocabulary from SIS dataset 
@@ -21,6 +33,57 @@ class VIST(data.Dataset):
         self.ids = list(self.vist['stories'].keys())
         self.transform = transform
         self.type = type
+
+    def __getitem__(self, index):
+        vist = self.vist
+        vocab = self.vocab
+        story_id = self.ids[index]
+
+        targets = []
+        images = []
+        photo_sequence = []
+        album_ids = []
+
+        story = vist['stories'][story_id]
+        image_formats = ['.jpg', '.gif', '.png', '.bmp']
+
+        for annotation in story:
+            storylet_id = annotation["storylet_id"]
+            image = Image.new('RGB', (256, 256))
+            image_id = annotation["photo_flickr_id"]
+            photo_sequence.append(image_id)
+            album_ids.append(annotation["album_id"])
+            
+            for image_format in image_formats:
+                try:
+                    image = Image.open(os.path.join(self.image_dir, self.type, str(image_id) + image_format)).convert('RGB')
+                except Exception:
+                    continue
+    
+            if self.transform is not None:
+                image = self.transform(image)
+            
+
+            images.append(image)
+           
+            text = annotation["text"]
+            tokens = []
+            try:
+                tokens = nltk.tokenize.word_tokenize(text.lower())
+            except Exception:
+                pass
+
+            caption = []
+            caption.append(vocab('<start>'))
+            caption.extend([vocab(token) for token in tokens])
+            caption.append(vocab('<end>'))
+            target = torch.Tensor(caption)
+            targets.append(target)
+
+        return torch.stack(images), targets, photo_sequence, album_ids
+
+    def __len__(self):
+        return len(self.ids)
 
     def _check_exists(self):
         # check exist main dataset directory
@@ -79,57 +142,6 @@ class VIST(data.Dataset):
 
         data = {'images': images, 'stories': stories}
         return data
-
-    def __getitem__(self, index):
-        vist = self.vist
-        vocab = self.vocab
-        story_id = self.ids[index]
-
-        targets = []
-        images = []
-        photo_sequence = []
-        album_ids = []
-
-        story = vist['stories'][story_id]
-        image_formats = ['.jpg', '.gif', '.png', '.bmp']
-
-        for annotation in story:
-            storylet_id = annotation["storylet_id"]
-            image = Image.new('RGB', (256, 256))
-            image_id = annotation["photo_flickr_id"]
-            photo_sequence.append(image_id)
-            album_ids.append(annotation["album_id"])
-            
-            for image_format in image_formats:
-                try:
-                    image = Image.open(os.path.join(self.image_dir, self.type, str(image_id) + image_format)).convert('RGB')
-                except Exception:
-                    continue
-    
-            if self.transform is not None:
-                image = self.transform(image)
-            
-
-            images.append(image)
-           
-            text = annotation["text"]
-            tokens = []
-            try:
-                tokens = nltk.tokenize.word_tokenize(text.lower())
-            except Exception:
-                pass
-
-            caption = []
-            caption.append(vocab('<start>'))
-            caption.extend([vocab(token) for token in tokens])
-            caption.append(vocab('<end>'))
-            target = torch.Tensor(caption)
-            targets.append(target)
-
-        return torch.stack(images), targets, photo_sequence, album_ids
-
-    def __len__(self):
-        return len(self.ids)
 
     def collate_fn(self, data):
         image_stories, caption_stories, photo_sequence_set, album_ids_set = zip(*data)

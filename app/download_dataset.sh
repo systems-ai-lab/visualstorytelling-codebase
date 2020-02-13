@@ -1,17 +1,18 @@
 #!/bin/bash
 
-# AUTHOR: Rizal Setya Perdana (rizalespe@ub.ac.id) DATE: 2020-02-11
+# AUTHOR: Rizal Setya Perdana (rizalespe@ub.ac.id)
 
-# About this script: the purpose of this script is to  
-# automatically downloading the Visual Storytelling (VIST) Dataset 
+# About this script: the purpose of this script is to automatically downloading 
+# the Visual Storytelling (VIST) Dataset 
 # from http://visionandlanguage.net/VIST/dataset.html. Please cite 
 # https://arxiv.org/abs/1604.03968 if you use this script.
 
-# NOTES: we have to change the download images link location and reupload 
-# to our Google Drive due to the permision issues from the GDOWN package.
-# Our dataset version is already resized to 256x256.   
+# NOTES: we have to change the download images link location and reupload to our 
+# Google Drive due to the permision issues from the GDOWN package. Our dataset 
+# version is already resized to 256x256.   
 
-# ARGUMENT: to specify the download location, add -d <DIR> argument for the dataset location.
+# ARGUMENT: to specify the download location, add -d <DIR> argument for the 
+# dataset location.
 
 # The structure of the directory is as follow:
 # 
@@ -46,7 +47,8 @@
 # 3. Resizing all of the images file (pending, we already change the 
 #    download images link to resized version)
 
-. ~/.bashrc # make sure all of the variable of the user can same as with user login
+. ~/.bashrc # make sure all of the variable of the user can same as with user 
+# login
 
 # Checking the dependency packages
 if python -c 'import gdown;'; then
