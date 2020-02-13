@@ -1,22 +1,27 @@
 import nltk
 import pickle
 from collections import Counter
-#
-# This code is a Python script that use for mapping from text into numerical index
-# which specify for visual storytelling (VIST) task. The input of this script is JSON
-# formatted file downloadded from http://visionandlanguage.net/VIST/dataset.html.
+
+# This code is a Python script that use for mapping from text into numerical 
+# index which specify for visual storytelling (VIST) task. The input of this 
+# script is JSON formatted file downloadded from 
+# http://visionandlanguage.net/VIST/dataset.html.
 # To download the dataset, we already provide a script downloader as follow:
 # https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/script/download_dataset.sh
-# 
-# If you use the download_dataset.sh script for downloading the dataset or directly 
-# download from the VIST website, we will get two kind of text annotation such as 
-# "SIS" and "DII". This script is intended to build the vovabulary from SIS text annotation.
-#     
 
-# Some part of this code is referenced to https://github.com/tkim-snu/GLACNet work. 
+# If you use the download_dataset.sh script for downloading the dataset or 
+# directly download from the VIST website, we will get two kind of text 
+# annotation such as "SIS" and "DII". This script is intended to build the
+# vovabulary from SIS text annotation.
+
+# Some part of this code is referenced to https://github.com/tkim-snu/GLACNet 
+# work. 
 
 class Vocabulary(object):
-    # This class is define the data structure of the vocabulary
+    """This class is a custom data structure object with the basic functional
+    such as adding new word, retrieving the index of word, and find the length
+    of the 
+    """
     def __init__(self):
         self.word2idx = {}
         self.idx2word = {}

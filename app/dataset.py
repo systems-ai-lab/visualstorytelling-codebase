@@ -3,9 +3,6 @@
 # About this script: This Python script is mainly used as custom dataset wrapper 
 # and subclass of torch.utils.data.Dataset.
 
-# TODO:
-# check the data is ready or not including directory, images, text-annotation 
-# file, and vocabulary file
 
 import os
 import os.path
@@ -14,20 +11,59 @@ import torch
 import torch.utils.data as data
 from PIL import Image
 import pickle
-
 from vocabulary import GenerateVocabulary
 
 class VIST(data.Dataset):
     """
         Args:
-            - dataset_dir (string): string of path to the dataset directory. In this codebase, the structure of dataset
-            - vocabulary_treshold (int, optional)
-            - type
-            - transform
+            - dataset_dir (string): string of path to the dataset directory. 
+                In this codebase, the structure of dataset directory is as 
+                follow:
+                ./dataset
+                    ├── images
+                    │   ├── test
+                    │   │   ├──images_1.jpg
+                    │   │   ├──images_n.jpg
+                    │   ├── train
+                    │   │   ├──images_1.jpg
+                    │   │   ├──images_n.jpg
+                    │   └── val
+                    │       ├──images_1.jpg
+                    │       ├──images_n.jpg
+                    └── text-annotation
+                        ├── dii
+                        │   ├── test.description-in-isolation.json
+                        │   ├── train.description-in-isolation.json
+                        │   └── val.description-in-isolation.json
+                        └── sis
+                            ├── test.story-in-sequence.json
+                            ├── train.story-in-sequence.json
+                            └── val.story-in-sequence.json
+                You can download and generate the structure and the dataset same
+                as above, you can use download_dataset.sh script by executing:
+                $ sh download_dataset.sh 
+                OR
+                $ sh download_dataset.sh -d <DIR>
+                if you want to specify the download directory location.
+                
+            - vocabulary_treshold (int, optional): if you do not specify this
+                parameter it set to default value 10. If the vocabulary file is 
+                not found in /dataset/vocabulary/ directory, it will generate
+                a new vocabulary file. But, if the vocabulary file is already 
+                exist, it will use the exsisting file to load the VIST dataset.  
+            
+            - type (string, optional): this parameter specify what kind of data
+                will be loaded that has 3 options [train, test, val]. This
+                depend on the need in process of learning
+
+            - transform (object): this parameter is an object from
+                torchvision.transforms which has purpose to transform 
+                the images data into the tensor
+
     """
     def __init__(self, dataset_dir, vocabulary_treshold=10, type='train', transform=None):
-        self.dataset_dir = dataset_dir # str: main dataset directory
-        self.vocabulary_treshold = vocabulary_treshold # int: get value minimum treshold of vocabulary from SIS dataset 
+        self.dataset_dir = dataset_dir
+        self.vocabulary_treshold = vocabulary_treshold
         self._check_exists()
         self.vist = self.sis_formatting(types=type)
         self.ids = list(self.vist['stories'].keys())
@@ -35,6 +71,10 @@ class VIST(data.Dataset):
         self.type = type
 
     def __getitem__(self, index):
+        """Return the data...
+            Args:
+            Returns: 
+        """
         vist = self.vist
         vocab = self.vocab
         story_id = self.ids[index]
@@ -86,18 +126,27 @@ class VIST(data.Dataset):
         return len(self.ids)
 
     def _check_exists(self):
+        """Checking the requirement, the availability of the dataset, and the 
+        directory structure is adequate for the next step or not. If the check
+        is fail, it will raise the error runtime.
+        """
         # check exist main dataset directory
         if not os.path.exists(self.dataset_dir):
-            raise RuntimeError('Main dataset directory is not found: ', self.dataset_dir) 
+            raise RuntimeError('Main dataset directory is not found: ', 
+        self.dataset_dir) 
        
         # check exist dataset structure directory
         self.image_dir = os.path.join(self.dataset_dir, 'images')
         if not os.path.exists(self.image_dir):
             raise RuntimeError('"images" directory is not found')
+        
         self.annotation_dir = os.path.join(self.dataset_dir, 'text-annotation')
         if not os.path.exists(self.annotation_dir):
             raise RuntimeError('"text-annotation" directory is not found')
-        self.vocabulary_file = os.path.join(self.dataset_dir,'vocabulary', 'vocabulary-'+str(self.vocabulary_treshold)+'.pkl')
+        
+        self.vocabulary_file = os.path.join(self.dataset_dir,'vocabulary',
+            'vocabulary-'+str(self.vocabulary_treshold)+'.pkl')
+        
         if not os.path.exists(self.vocabulary_file):
             self.generate_vocabulary()
         else:
@@ -105,22 +154,32 @@ class VIST(data.Dataset):
                 self.vocab = pickle.load(f) 
     
     def generate_vocabulary(self):
+        """ If vocabulary file is not exist, this function will be called to
+            generate the word vocabulary from SIS text-annotation dataset.
+        """
         if not os.path.exists(os.path.join(self.dataset_dir,'vocabulary')):
             os.mkdir(os.path.join(self.dataset_dir, 'vocabulary')) 
 
-        # generating vocabulary
-        generate = GenerateVocabulary(self.sis_formatting(), self.vocabulary_treshold, self.vocabulary_file)
+        GenerateVocabulary(self.sis_formatting(), 
+                    self.vocabulary_treshold, self.vocabulary_file)
+        
         with open(self.vocabulary_file, 'rb') as f:
             self.vocab = pickle.load(f)
 
     def sis_formatting(self, types='train'):
-        # This function intended to formatting the text-annotation JSON file of VIST dataset
+        """This function purpose is reformating from text-annotation JSON file
+            to the new data structure. 
 
+            Args: type [train, val, test]. Default: train
+            Return: the formatted SIS text-annotation object.
+
+        """
         sis_file_type ={'train':'train.story-in-sequence.json', 
                         'val':'val.story-in-sequence.json', 
                         'test':'test.story-in-sequence.json'}
 
-        sis_file = os.path.join(self.dataset_dir, 'text-annotation', 'sis', sis_file_type[types])
+        sis_file = os.path.join(self.dataset_dir, 'text-annotation', 'sis', 
+                    sis_file_type[types])
         
         if not os.path.exists(sis_file):
             raise RuntimeError('"File annotation is not found')
@@ -144,8 +203,12 @@ class VIST(data.Dataset):
         return data
 
     def collate_fn(self, data):
-        image_stories, caption_stories, photo_sequence_set, album_ids_set = zip(*data)
+        """This function is to collate the returned data into 5 for each story.
+        For each story it contain image_stories, caption, length of caption,
+        file image squence, and album code.
+        """
 
+        image_stories, caption_stories, photo_sequence_set, album_ids_set = zip(*data)
         targets_set = []
         lengths_set = []
 
