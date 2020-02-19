@@ -11,6 +11,7 @@ import torch
 import torch.utils.data as data
 from PIL import Image
 import pickle
+import nltk
 from vocabulary import GenerateVocabulary
 
 class VIST(data.Dataset):
@@ -72,7 +73,7 @@ class VIST(data.Dataset):
 
     def __getitem__(self, index):
         """Return the data...
-            Args:
+            Args: index 
             Returns: 
         """
         vist = self.vist
@@ -207,7 +208,6 @@ class VIST(data.Dataset):
         For each story it contain image_stories, caption, length of caption,
         file image squence, and album code.
         """
-
         image_stories, caption_stories, photo_sequence_set, album_ids_set = zip(*data)
         targets_set = []
         lengths_set = []
