@@ -166,6 +166,9 @@ class VIST(data.Dataset):
         
         with open(self.vocabulary_file, 'rb') as f:
             self.vocab = pickle.load(f)
+    
+    def get_vocabulary(self):
+        return self.vocab
 
     def sis_formatting(self, types='train'):
         """This function purpose is reformating from text-annotation JSON file
