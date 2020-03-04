@@ -7,6 +7,7 @@ from PIL import Image
 from models.CustomModel import Encoder, Decoder
 import yaml
 from helper import Logger
+import wandb
 
 def main(args):
 
@@ -23,6 +24,10 @@ def main(args):
     logger = Logger(model_dir = cfg['logging']['save_model_dir'], \
         tensorboard_dir = cfg['logging']['tensorboard'], \
             file_config = args.config)
+    
+    if cfg['logging']['wandb']:
+        wandb.init(project=cfg['logging']['wandb-project'])
+
     ## END OF DO NOT CHANGE! this code
     
     # Transformation definition
@@ -95,6 +100,13 @@ def main(args):
 
     # END OF Training Configuration ############################################
 
+    # logging the model in wandb
+    if cfg['logging']['wandb']:
+        wandb.watch(encoder)
+        wandb.watch(decoder)
+    
+    min_avg_loss = float("inf")
+    overfit_warn = 0
     all_step_train = 0
     all_step_val = 0
 
@@ -139,8 +151,11 @@ def main(args):
             loss_train.backward()
             optimizer.step()
             
-            # add loss value for train process to tensorboard 
+            # add loss value for train process to tensorboard & wandb
             logger.tensorboard_scalar(tag = "loss/train", scalar_value = loss_train.item(), global_step = all_step_train)
+            if cfg['logging']['wandb']:
+                wandb.log({"Train Loss": loss_train})
+
             all_step_train +=1
 
             if batch_ix % cfg['logging']['print_interval'] == 0:
@@ -188,6 +203,9 @@ def main(args):
 
             # add loss value for train process to tensorboard 
             logger.tensorboard_scalar(tag = "loss/val", scalar_value = loss_validation.item(), global_step = all_step_val)
+            if cfg['logging']['wandb']:
+                wandb.log({"Validation Loss": loss_validation})
+
             all_step_val +=1
 
             if batch_ix % cfg['logging']['print_interval'] == 0:
@@ -196,11 +214,22 @@ def main(args):
         avg_loss_val_per_epoch = avg_loss_val_per_epoch/(cfg['training']['batch_size'] * 5 * len(data_val_loader))
         print("Average validation loss [%d/%d] : %4f" %(epoch, cfg['training']['epoch'], avg_loss_val_per_epoch))
 
-        # add loss value to tensorboard  
+        # add loss value to tensorboard & wandb  
         loss_train_val = zip(["train", "validation"], [avg_loss_train_per_epoch, avg_loss_val_per_epoch])
         logger.tensorboard_scalars(tag = "average/loss", scalar_list = loss_train_val,  global_step = epoch)
+        if cfg['logging']['wandb']:
+            wandb.log({"Average Loss Train": avg_loss_train_per_epoch, "Average Loss Val": avg_loss_val_per_epoch})
 
-    
+        # termination condition
+        overfit_warn = overfit_warn + 1 if (min_avg_loss < avg_loss_val_per_epoch) else 0
+        min_avg_loss = min(min_avg_loss, avg_loss_val_per_epoch)
+
+        # show the current value of overfitting warning parameter
+        logger.tensorboard_scalar(tag = "overfit_warning", scalar_value = overfit_warn, global_step = epoch)
+
+        # the training process will be break if the overfitting warning is greater or equal to the value from config
+        if overfit_warn >= cfg['training']['overfit_warning']:
+            break
 
         # END OF epoch itteration ##############################################
 

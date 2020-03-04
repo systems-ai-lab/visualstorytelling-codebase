@@ -4,8 +4,6 @@ import time
 import ntpath
 from torch.utils.tensorboard import SummaryWriter
 
-
-
 class Vocabulary(object):
     """This class is a custom data structure object with the basic functional
     such as adding new word, retrieving the index of word, and find the length
