@@ -7,5 +7,6 @@ This codebase including both source code written in Python and also documentatio
 
 To run the training process, execute the ```main.py``` file following by the configuration file as follow:
 ```
+$cd app
 $python main.py --config config/sample-config.yml
 ```
