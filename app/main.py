@@ -6,6 +6,7 @@ from torchvision import transforms
 from PIL import Image
 from models.CustomModel import Encoder, Decoder
 import yaml
+from helper import Logger
 
 def main(args):
 
@@ -18,6 +19,10 @@ def main(args):
     device = torch.device('cuda:'+str(cfg['training']['gpu_id']) \
         if torch.cuda.is_available() else 'cpu')
 
+    # logger configuration
+    logger = Logger(model_dir = cfg['logging']['save_model_dir'], \
+        tensorboard_dir = cfg['logging']['tensorboard'], \
+            file_config = args.config)
     ## END OF DO NOT CHANGE! this code
     
     # Transformation definition
@@ -76,6 +81,11 @@ def main(args):
     
     parameter = encoder.get_parameters() + decoder.get_parameters()
 
+    # save the model structure on tensorboard
+    # images,_,_,_,_ = next(iter(data_train_loader))
+    # input_encoder = torch.stack(images).to(device)
+    # logger.tensorboard_graph(model=encoder, input_to_model= input_encoder)
+
     # loss function definition
     criterion = nn.CrossEntropyLoss()
 
@@ -85,18 +95,22 @@ def main(args):
 
     # END OF Training Configuration ############################################
 
+    all_step_train = 0
+    all_step_val = 0
+
     for epoch in range(cfg['training']['epoch']): # epoch itteration ###########
         
+        # training phase #######################################################
         encoder.train()
         decoder.train()
-        avg_loss = 0.0
+        avg_loss_train_per_epoch = 0.0
 
         for batch_ix, (image_sequence_set, targets_text_set, lengths_set, photo_squence_set, 
             album_ids_set) in enumerate(data_train_loader):
             
             decoder.zero_grad()
             encoder.zero_grad()
-            loss = 0
+            loss_train = 0
             
             image_sequence_set = torch.stack(image_sequence_set).to(device) 
             '''
@@ -117,19 +131,79 @@ def main(args):
                 output = decoder(visual_feature, text_story, text_story_length)
 
                 for sj, (zip_output, zip_text_story, zip_text_story_length) in enumerate(zip(output, text_story, text_story_length)):
-                    loss += criterion(zip_output, zip_text_story[0:zip_text_story_length])
+                    loss_train += criterion(zip_output, zip_text_story[0:zip_text_story_length])
             
-            avg_loss += loss.item()
+            avg_loss_train_per_epoch += loss_train.item()
             # the loss value need to devide with the number of batch * number of sequence story (5)
-            loss = loss / (cfg['training']['batch_size'] * 5)
-            loss.backward()
+            loss_train = loss_train / (cfg['training']['batch_size'] * 5)
+            loss_train.backward()
             optimizer.step()
+            
+            # add loss value for train process to tensorboard 
+            logger.tensorboard_scalar(tag = "loss/train", scalar_value = loss_train.item(), global_step = all_step_train)
+            all_step_train +=1
 
-            if batch_ix % cfg['logging']['interval'] == 0:
-                print('Epoch [%d/%d], Training step [%d/%d], Loss Train: %4f' %(epoch, cfg['training']['epoch'], batch_ix, len(data_train_loader), loss.item()))
+            if batch_ix % cfg['logging']['print_interval'] == 0:
+                print('Epoch [%d/%d], Training step [%d/%d], Loss Train: %4f' %(epoch, cfg['training']['epoch'], batch_ix, len(data_train_loader), loss_train.item()))
+
+        # save the trained model every epoch
+        logger.save_model(encoder, decoder, epoch)
+
+        # epoch loss
+        avg_loss_train_per_epoch = avg_loss_train_per_epoch/(cfg['training']['batch_size'] * 5 * len(data_train_loader))
+        print("Average train loss [%d/%d] : %4f" %(epoch, cfg['training']['epoch'], avg_loss_train_per_epoch))
+
+        # validation phase ####################################################
+        encoder.eval()
+        decoder.eval()
+        avg_loss_val_per_epoch = 0.0
+
+        for batch_ix, (image_sequence_set, targets_text_set, lengths_set, photo_squence_set, album_ids_set) in enumerate(data_val_loader):
+            
+            loss_validation = 0
+            image_sequence_set = torch.stack(image_sequence_set).to(device) 
+            '''
+            image_sequence dimension:
+                batch_size, story_sequence_length, image_channels, width, height
+            '''
+            # encoding sequence of images (visual representation)
+            visual_sequence_features, _ = encoder(image_sequence_set)
+
+            # pairing image and text data
+            visual_textual_pairs = zip(visual_sequence_features, targets_text_set, lengths_set)
+
+            # decoding the visual features with the text story
+            # this loop process only 1 story for each iteration. It will iterate 'batch_size' times
+            for story_ix, (visual_feature, text_story, text_story_length) in enumerate(visual_textual_pairs):
+                
+                text_story = text_story.to(device) 
+                output = decoder(visual_feature, text_story, text_story_length)
+
+                for sj, (zip_output, zip_text_story, zip_text_story_length) in enumerate(zip(output, text_story, text_story_length)):
+                    loss_validation += criterion(zip_output, zip_text_story[0:zip_text_story_length])
+            
+            avg_loss_val_per_epoch += loss_validation.item()
+            # the loss value need to devide with the number of batch * number of sequence story (5)
+            loss_validation = loss_validation / (cfg['training']['batch_size'] * 5)
+
+            # add loss value for train process to tensorboard 
+            logger.tensorboard_scalar(tag = "loss/val", scalar_value = loss_validation.item(), global_step = all_step_val)
+            all_step_val +=1
+
+            if batch_ix % cfg['logging']['print_interval'] == 0:
+                print('Epoch [%d/%d], Validation step [%d/%d], Loss Validation: %4f' %(epoch, cfg['training']['epoch'], batch_ix, len(data_val_loader), loss_validation.item()))
         
-        #         print(photo_squence_set)
+        avg_loss_val_per_epoch = avg_loss_val_per_epoch/(cfg['training']['batch_size'] * 5 * len(data_val_loader))
+        print("Average validation loss [%d/%d] : %4f" %(epoch, cfg['training']['epoch'], avg_loss_val_per_epoch))
+
+        # add loss value to tensorboard  
+        loss_train_val = zip(["train", "validation"], [avg_loss_train_per_epoch, avg_loss_val_per_epoch])
+        logger.tensorboard_scalars(tag = "average/loss", scalar_list = loss_train_val,  global_step = epoch)
+
+    
+
         # END OF epoch itteration ##############################################
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, help='specify the file configuration, YAML formatted')
