@@ -4,3 +4,8 @@ This repository containing source code and documentation in the process of the v
 This codebase including both source code written in Python and also documentation for each step. Included in this repository:
 1. [Downloading the dataset](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/documentation/downloading-the-dataset.md)
 2. [Generating the text vocabulary](https://github.com/systems-ai-lab/visualstorytelling-codebase/blob/master/documentation/generating-text-vocabulary.md)
+
+To run the training process, execute the ```main.py``` file following by the configuration file as follow:
+```
+$python main.py --config config/sample-config.yml
+```
