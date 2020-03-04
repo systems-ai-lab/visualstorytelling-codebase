@@ -218,7 +218,7 @@ def main(args):
         loss_train_val = zip(["train", "validation"], [avg_loss_train_per_epoch, avg_loss_val_per_epoch])
         logger.tensorboard_scalars(tag = "average/loss", scalar_list = loss_train_val,  global_step = epoch)
         if cfg['logging']['wandb']:
-            wandb.log({"Average Loss Train": avg_loss_train_per_epoch, "Average Loss Val": avg_loss_val_per_epoch})
+            wandb.log({"Average Loss Train": avg_loss_train_per_epoch, "Average Loss Val": avg_loss_val_per_epoch}, step=epoch)
 
         # termination condition
         overfit_warn = overfit_warn + 1 if (min_avg_loss < avg_loss_val_per_epoch) else 0
@@ -226,6 +226,8 @@ def main(args):
 
         # show the current value of overfitting warning parameter
         logger.tensorboard_scalar(tag = "overfit_warning", scalar_value = overfit_warn, global_step = epoch)
+        if cfg['logging']['wandb']:
+            wandb.log({"overfit_warning": overfit_warn}, step=epoch)
 
         # the training process will be break if the overfitting warning is greater or equal to the value from config
         if overfit_warn >= cfg['training']['overfit_warning']:
