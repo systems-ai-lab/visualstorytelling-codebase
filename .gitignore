@@ -6,5 +6,3 @@ dataset/text-annotation/sis/*
 dataset/vocabulary/*
 app/__pycache__/*
 app/models/__pycache__/*
-app/config/*
-!app/config/sample-config.yml
