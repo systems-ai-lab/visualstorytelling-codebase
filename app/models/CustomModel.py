@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import numpy as np
+import torch.nn.functional as F
+from collections import Counter
+import operator
+
 
 class Encoder(nn.Module):
     '''
@@ -197,3 +201,71 @@ class Decoder(nn.Module):
         
         return outputs       
 
+    def inference(self, features):
+        features = self.linear_encoding_to_embedding(features)
+        features = F.relu(features)
+        results = []
+        (hn, cn) = self.init_hidden()
+        vocab = self.vocabulary
+        end_vocab = vocab('<end>')
+        forbidden_list = [vocab('<pad>'), vocab('<start>'), vocab('<unk>')]
+        termination_list = [vocab('.'), vocab('?'), vocab('!')]
+        function_list = [vocab('<end>'), vocab('.'), vocab('?'), vocab('!'), vocab('a'), vocab('an'), vocab('am'), vocab('is'), vocab('was'), vocab('are'), vocab('were'), vocab('do'), vocab('does'), vocab('did')]
+        
+        cumulated_word = []
+        for feature in features:
+            feature = feature.unsqueeze(0).unsqueeze(0)
+            predicted = torch.tensor([1], dtype=torch.long).to(self.device)
+            lstm_input = torch.cat((feature, self.embedding(predicted).unsqueeze(1)), 2)
+            sampled_ids = [predicted,]
+            
+            count = 0
+            prob_sum = 1.0
+
+            for i in range(50):
+                outputs, (hn, cn) = self.lstm(lstm_input, (hn, cn))
+                outputs = self.linear_lstm_to_vocabulary(outputs.squeeze(1))
+
+                   
+                if predicted not in termination_list:
+                    outputs[0][end_vocab] = -100.0
+
+                for forbidden in forbidden_list:
+                    outputs[0][forbidden] = -100.0
+
+                cumulated_counter = Counter()
+                cumulated_counter.update(cumulated_word)
+                
+                prob_res = outputs[0]
+                prob_res = self.softmax(prob_res)
+                for word, cnt in cumulated_counter.items():
+                    if cnt > 0 and word not in function_list:
+                        prob_res[word] = prob_res[word] / (1.0 + cnt * 5.0)
+                prob_res = prob_res * (1.0 / prob_res.sum())
+
+                
+                candidate = []
+                for i in range(100):
+                    index = np.random.choice(prob_res.size()[0], 1, p=prob_res.cpu().detach().numpy())[0]
+                    candidate.append(index)
+
+                counter = Counter()
+                counter.update(candidate)
+
+                sorted_candidate = sorted(counter.items(), key=operator.itemgetter(1), reverse=True)
+
+                predicted, _ = counter.most_common(1)[0]
+                cumulated_word.append(predicted)
+
+                predicted = torch.from_numpy(np.array([predicted])).to(self.device)
+                sampled_ids.append(predicted)
+
+                if predicted == 2:
+                    break
+                
+
+                lstm_input = torch.cat((feature, self.embedding(predicted).unsqueeze(1)), 2)
+
+            results.append(sampled_ids)
+
+        return results

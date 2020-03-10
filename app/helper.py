@@ -65,23 +65,21 @@ class Logger():
         torch.save(model_encoder.state_dict(), os.path.join(self.model_dir, self.experiment_id, '%s-encoder-%d.pkl' %(current_time, epoch+1)))
         torch.save(model_decoder.state_dict(), os.path.join(self.model_dir, self.experiment_id, '%s-decoder-%d.pkl' %(current_time, epoch+1)))
     
-    def tensorboard_scalar(self, tag, scalar_value, global_step):
+    def tensorboard_init(self, tag):
+        return SummaryWriter(os.path.join(self.tensorboard_dir, self.experiment_id, tag))
+
+    def tensorboard_scalar(self, writer, scalar_value, global_step):
         # create object for tensorboard writing
-        writer = SummaryWriter(os.path.join(self.tensorboard_dir, self.experiment_id, tag))
-        writer.add_scalar(tag=self.experiment_id+"_"+tag, scalar_value=scalar_value, global_step=global_step)
+        writer.add_scalar(tag=self.experiment_id, scalar_value=scalar_value, global_step=global_step)
     
-    def tensorboard_scalars(self, tag, scalar_list, global_step):
+    def tensorboard_scalars(self, writer, scalar_list, global_step):
         obj = {}
         for id, data in enumerate(scalar_list):
             obj[data[0]] = data[1]
         
-        writer = SummaryWriter(os.path.join(self.tensorboard_dir, self.experiment_id, tag))
-        writer.add_scalars(self.experiment_id+"_"+tag, obj, global_step)
+        writer.add_scalars(self.experiment_id, obj, global_step)
 
     def tensorboard_graph(self, model, input_to_model):
         writer = SummaryWriter(os.path.join(self.tensorboard_dir, self.experiment_id))
         writer.add_graph(model=model, input_to_model=input_to_model)
         writer.close()
-
-
-

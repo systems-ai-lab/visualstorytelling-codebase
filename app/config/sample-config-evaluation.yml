@@ -1,0 +1,24 @@
+evaluation_dir_class: ../VIST-Challenge-NAACL-2018/
+vist_eval_dir: ../vist_eval
+vist_api_dir: ../vist_api/
+
+sis_test: ../dataset/text-annotation/sis/test.story-in-sequence.json
+test_result: 
+  dir: ../_results/vist/
+  inference_id: inference1
+  experiment_id: train7
+  model_id: '1'
+  file: 20200310_002031.json
+
+dataset:
+  directory:
+    image: ../dataset/images/ 
+    annotation: ../dataset/text-annotation
+  image_resize: 224
+  vocabulary_treshold: 10
+  shuffle: False
+  num_workers: 0
+
+evaluation_result:
+  dir: ../_results/vist_evaluation/
+  

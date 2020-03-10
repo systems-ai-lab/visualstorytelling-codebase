@@ -1,0 +1,33 @@
+dataset:
+  directory: '../dataset/'
+  image_resize: 224
+  vocabulary_treshold: 10
+  shuffle: False
+  num_workers: 0
+
+inference:
+  gpu_id: 1 # specify the GPU id for learning process
+  batch_size: 64 # the number of data contained in every batch
+  evaluation_dir: '../VIST-Challenge-NAACL-2018/' # https://github.com/windx0303/VIST-Challenge-NAACL-2018
+
+model:
+  dir: '_models/'
+  id_experiment: 'train1'
+  id_model: '1'
+  encoder:
+    linear_visual_features:
+      out_size: 1024
+    lstm:
+      hidden_size: 512
+      num_layers: 2
+      bidirectional: True 
+  decoder:
+    lstm:
+      embeed_size: 256 # output from embedded layer
+      hidden_size: 512
+      num_layers: 2
+
+logging:
+  print_interval: 10
+  result_dir: '_results/'
+  

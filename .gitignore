@@ -8,4 +8,7 @@ app/__pycache__/*
 app/models/__pycache__/*
 app/wandb/*
 app/config/*
+app/*.pyc
 !app/config/sample-config.yml
+!app/config/sample-config-inference.yml
+!app/config/sample-config-evaluation.yml

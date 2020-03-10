@@ -8,6 +8,8 @@ from models.CustomModel import Encoder, Decoder
 import yaml
 from helper import Logger
 import wandb
+import ntpath
+import os
 
 def main(args):
 
@@ -21,12 +23,20 @@ def main(args):
         if torch.cuda.is_available() else 'cpu')
 
     # logger configuration
+    experiment_id = ntpath.basename(args.config)
+    experiment_id = os.path.splitext(experiment_id)[0]
+
     logger = Logger(model_dir = cfg['logging']['save_model_dir'], \
         tensorboard_dir = cfg['logging']['tensorboard'], \
             file_config = args.config)
+
+    writer_loss_train = logger.tensorboard_init("loss/train")
+    writer_loss_val = logger.tensorboard_init("loss/val")
+    writer_average = logger.tensorboard_init("average/loss")
+    writer_overfit_warn = logger.tensorboard_init("overfit_warn")
     
     if cfg['logging']['wandb']:
-        wandb.init(project=cfg['logging']['wandb-project'])
+        wandb.init(project=cfg['logging']['wandb-project'], name = experiment_id)
 
     ## END OF DO NOT CHANGE! this code
     
@@ -152,14 +162,15 @@ def main(args):
             optimizer.step()
             
             # add loss value for train process to tensorboard & wandb
-            logger.tensorboard_scalar(tag = "loss/train", scalar_value = loss_train.item(), global_step = all_step_train)
+            logger.tensorboard_scalar(writer = writer_loss_train, scalar_value = loss_train.item(), global_step = all_step_train)
             if cfg['logging']['wandb']:
-                wandb.log({"Train Loss": loss_train})
+                wandb.log({"Train Loss": loss_train.item()})
 
             all_step_train +=1
 
             if batch_ix % cfg['logging']['print_interval'] == 0:
                 print('Epoch [%d/%d], Training step [%d/%d], Loss Train: %4f' %(epoch, cfg['training']['epoch'], batch_ix, len(data_train_loader), loss_train.item()))
+                
 
         # save the trained model every epoch
         logger.save_model(encoder, decoder, epoch)
@@ -201,10 +212,10 @@ def main(args):
             # the loss value need to devide with the number of batch * number of sequence story (5)
             loss_validation = loss_validation / (cfg['training']['batch_size'] * 5)
 
-            # add loss value for train process to tensorboard 
-            logger.tensorboard_scalar(tag = "loss/val", scalar_value = loss_validation.item(), global_step = all_step_val)
+            # add loss value for validation process to tensorboard 
+            logger.tensorboard_scalar(writer = writer_loss_val, scalar_value = loss_validation.item(), global_step = all_step_val)
             if cfg['logging']['wandb']:
-                wandb.log({"Validation Loss": loss_validation})
+                wandb.log({"Validation Loss": loss_validation.item()})
 
             all_step_val +=1
 
@@ -216,18 +227,18 @@ def main(args):
 
         # add loss value to tensorboard & wandb  
         loss_train_val = zip(["train", "validation"], [avg_loss_train_per_epoch, avg_loss_val_per_epoch])
-        logger.tensorboard_scalars(tag = "average/loss", scalar_list = loss_train_val,  global_step = epoch)
+        logger.tensorboard_scalars(writer = writer_average, scalar_list = loss_train_val,  global_step = epoch)
         if cfg['logging']['wandb']:
-            wandb.log({"Average Loss Train": avg_loss_train_per_epoch, "Average Loss Val": avg_loss_val_per_epoch}, step=epoch)
+            wandb.log({"Average Loss Train": avg_loss_train_per_epoch, "Average Loss Val": avg_loss_val_per_epoch})
 
         # termination condition
         overfit_warn = overfit_warn + 1 if (min_avg_loss < avg_loss_val_per_epoch) else 0
         min_avg_loss = min(min_avg_loss, avg_loss_val_per_epoch)
 
         # show the current value of overfitting warning parameter
-        logger.tensorboard_scalar(tag = "overfit_warning", scalar_value = overfit_warn, global_step = epoch)
+        logger.tensorboard_scalar(writer = writer_overfit_warn, scalar_value = overfit_warn, global_step = epoch)
         if cfg['logging']['wandb']:
-            wandb.log({"overfit_warning": overfit_warn}, step=epoch)
+            wandb.log({"overfit_warning": overfit_warn})
 
         # the training process will be break if the overfitting warning is greater or equal to the value from config
         if overfit_warn >= cfg['training']['overfit_warning']:

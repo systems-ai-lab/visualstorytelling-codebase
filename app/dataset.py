@@ -170,6 +170,17 @@ class VIST(data.Dataset):
     def get_vocabulary(self):
         return self.vocab
 
+    def get_sis_file(self, types):
+        sis_file_type ={'train':'train.story-in-sequence.json', 
+                        'val':'val.story-in-sequence.json', 
+                        'test':'test.story-in-sequence.json'}
+        
+        sis_file = os.path.join(self.dataset_dir, 'text-annotation', 'sis', 
+                    sis_file_type[types])
+        
+        if os.path.exists(sis_file):
+            return sis_file
+
     def sis_formatting(self, types='train'):
         """This function purpose is reformating from text-annotation JSON file
             to the new data structure. 

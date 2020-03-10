@@ -10,3 +10,20 @@ To run the training process, execute the ```main.py``` file following by the con
 $ cd app
 $ python main.py --config config/sample-config.yml
 ```
+
+To run the inference process (generating stories from trained model) execute ```inference.py``` as follow:
+```
+$ cd app
+$ python inference.py --config config/sample-config-inference.yml
+```
+
+To run the evaluation, (generating score from generated stories) execute ```evaluation.py``` as follow:
+```
+$ cd app
+$ python evaluation.py --config config/sample-config-evaluation.yml
+```
+
+For evaluation, we need the following code:
+1. VIST API: https://github.com/lichengunc/vist_api
+2. VIST Eval: https://github.com/lichengunc/vist_eval.git
+3. VIST Challenge NAACL 2018: https://github.com/windx0303/VIST-Challenge-NAACL-2018
